@@ -1,0 +1,10 @@
+[Unit]
+Description=Wait for PostgreSQL container to be healthy
+After=postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'until podman healthcheck run postgresql; do sleep 2; done'
+TimeoutStartSec=180

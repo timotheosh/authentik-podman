@@ -1,7 +1,66 @@
-#+title: Readme
+#+title: Authentic podman systemd files
+#+options: toc:nil
 
 * Authentic podman systemd files
 Systemd files for running Authentik on a single host.
+** Installation and use
+1. Check out the repo and switch into the root of the repo
+   #+begin_src shell
+git clone https://github.com/timotheosh/authentik-podman.git
+cd authentik-podman/systemd/
+   #+end_src
+2. Create the data directories and the needed container directories
+   #+begin_src shell
+mkdir -p ~/authentik/{data,certs,custom-templates}
+mkdir -p  ~/.config/containers/systemd/
+   #+end_src
+3. Copy files over
+   #+begin_src shell
+cp * ~/.config/containers/systemd/
+   #+end_src
+4. Copy the environment file and fill in you env file
+   #+begin_src shell
+cp ~/.config/containers/systemd/env.example ~/.config/containers/systemd/.env
+nano ~/.config/containers/systemd/.env
+   #+end_src
+5. Reload systemd user daemon so Quadlet generates the service units
+   #+begin_src shell
+systemctl --user daemon-reload
+   #+end_src
+6. Verify the units were generated — you should see the five generated services plus postgresql-healthy
+   #+begin_src shell
+systemctl --user list-unit-files | grep -E 'authentik|postgresql'
+   #+end_src
+   Expected output should include:
+   - authentik-database-volume.service
+   - authentik-network.service
+   - postgresql.service
+   - postgresql-healthy.service
+   - authentik-server.service
+   - authentik-worker.service
+7. Enable and start
+   #+begin_src shell
+systemctl --user enable --now postgresql.service authentik-server.service authentik-worker.service
+   #+end_src
+8. Enable the auto-update timer for PostgreSQL
+   #+begin_src shell
+systemctl --user enable --now podman-auto-update.timer
+   #+end_src
+9. Enable running programs after logging out for your user
+   #+begin_src shell
+loginctl enable-linger $USER
+   #+end_src
+10. Authentik updates should be applied manually. Authentik is known to push breaking changes in minor releases, so always review the changelog before updating:
+    #+begin_src shell
+# Pull the latest image for the 2026.2 tag
+podman pull ghcr.io/goauthentik/server:2026.2
+
+# Review changelog at https://goauthentik.io/docs/releases/2026.2
+
+# Restart the services to use the new image
+systemctl --user restart authentik-server.service authentik-worker.service
+    #+end_src
+
 ** License
 The MIT License (MIT)
 

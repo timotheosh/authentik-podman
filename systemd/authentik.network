@@ -1,0 +1,3 @@
+[Network]
+# Default bridge driver with DNS enabled (Podman default).
+# NetworkName is implicitly systemd-authentik.
